@@ -1,10 +1,9 @@
-import javax.management.MBeanInfo;
-import javax.management.MBeanOperationInfo;
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
+import javax.management.*;
+import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+import java.awt.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
@@ -15,9 +14,11 @@ public class Main {
         String portNum = "9999";
         //Аргумент для вызываемой
         String[] argsForOperations = new String[]{""};
+        String BEAN_NAME_MEMORY = "java.lang:type=Memory";
         String BEAN_NAME = "org.springframework.boot:type=Endpoint,name=Health";
         //Вызываемая операция
         String OPERATION_FOR_RUN = "health";
+        String ATTRIBUTE_FOR_RUN = "HeapMemoryUsage";
         JMXConnector connector = null;
 
         String jmxString = "";
@@ -27,10 +28,16 @@ public class Main {
             //JMXServiceURL url = new JMXServiceURL(jmxString);
             connector = JMXConnectorFactory.connect(url);
             MBeanServerConnection remote = connector.getMBeanServerConnection();
+            ObjectName bean_memory = new ObjectName(BEAN_NAME_MEMORY);
+            CompositeData compositeData = (CompositeData) remote.getAttribute(bean_memory, "HeapMemoryUsage");
+            System.out.println(compositeData.get("used"));
+
 
             ObjectName bean = new ObjectName(BEAN_NAME);
             MBeanInfo info = remote.getMBeanInfo(bean);
+
             final MBeanOperationInfo[] operations = info.getOperations();
+
             final MBeanOperationInfo mBeanOperationInfo = Arrays.stream(operations)
                     .filter(it -> it.getName().equals(OPERATION_FOR_RUN))
                     .findFirst()
